@@ -16,6 +16,13 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.12'
+
+      # ΚΡΙΣΙΜΟ: Εγκατάσταση Java για να μπορεί να τρέξει ο PySpark κατά τα tests
+      - name: Set up Java for PySpark Workloads
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
           
       - name: Install dependencies
         run: |
@@ -28,6 +35,6 @@ jobs:
           # Σταματάει αν υπάρχουν Python syntax errors ή undefined names
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           
-      - name: Test with pytest
+      - name: Test Infrastructure with pytest
         run: |
           pytest

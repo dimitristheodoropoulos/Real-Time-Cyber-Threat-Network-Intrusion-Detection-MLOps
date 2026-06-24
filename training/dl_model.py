@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-class FraudNN(nn.Module):
+class IntrusionNN(nn.Module):
     def __init__(self, input_dim):
-        super(FraudNN, self).__init__()
+        super(IntrusionNN, self).__init__()
         self.layer1 = nn.Linear(input_dim, 16)
         self.layer2 = nn.Linear(16, 8)
         self.output = nn.Linear(8, 1)
@@ -21,7 +21,7 @@ def train_pytorch_model(X_train, y_train):
     X = torch.tensor(X_train.values, dtype=torch.float32)
     y = torch.tensor(y_train.values, dtype=torch.float32).view(-1, 1)
     
-    model = FraudNN(X.shape[1])
+    model = IntrusionNN(X.shape[1])
     criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
 

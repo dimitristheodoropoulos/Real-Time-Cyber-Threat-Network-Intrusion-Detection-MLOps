@@ -5,7 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class FraudRAGService:
+class IntrusionRAGService:
     def __init__(self):
         self.client = chromadb.PersistentClient(path="./chroma_db")
         self.emb_fn = embedding_functions.DefaultEmbeddingFunction()
@@ -20,7 +20,7 @@ class FraudRAGService:
             policies = [
                 "Policy: Transactions over 500 Euro at night (23:00-05:00) require manual review.",
                 "Policy: High frequency of small transactions from the same user is a sign of card testing.",
-                "Policy: Merchant category 5411 (Grocery) has low fraud risk, while 7995 (Gambling) is high risk.",
+                "Policy: Merchant category 5411 (Grocery) has low intrusion risk, while 7995 (Gambling) is high risk.",
                 "Policy: International transactions on new accounts must be blocked immediately."
             ]
             ids = [f"id{i}" for i in range(len(policies))]
@@ -55,4 +55,4 @@ class FraudRAGService:
             print(f"⚠️ LLM Error: {e}")
             return f"Policy Match: {relevant_policy} (LLM Timeout)"
 
-rag_service = FraudRAGService()
+rag_service = IntrusionRAGService()

@@ -7,8 +7,10 @@ prometheus-fastapi-instrumentator
 # Machine Learning & Tracking
 mlflow
 pandas
+numpy
 xgboost
 scikit-learn
+pyspark
 
 # Feature Store & Orchestration
 redis

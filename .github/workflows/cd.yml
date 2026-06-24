@@ -3,7 +3,7 @@ name: CD Pipeline
 on:
   push:
     tags:
-      - 'v*' # Τρέχει μόνο όταν κάνεις tag (π.χ. git tag v1.0)
+      - 'v*' # Τρέχει όταν κάνεις git tag (π.χ. git tag v1.0.0 && git push origin v1.0.0)
 
 jobs:
   build-and-push:
@@ -17,10 +17,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
-      - name: Build and push
+      - name: Build and Push Revision-Compliant Image
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./infrastructure/Dockerfile # Βεβαιώσου για το path
+          file: ./Dockerfile # Διορθώθηκε με βάση το project tree σου
           push: true
-          tags: your-dockerhub-username/fraud-api:latest
+          # Κάνει push δύο tags: το :latest ΚΑΙ το συγκεκριμένο version tag (π.χ. :v1.0.0)
+          tags: |
+            your-dockerhub-username/network-intrusion-api:latest
+            your-dockerhub-username/network-intrusion-api:${{ github.ref_name }}

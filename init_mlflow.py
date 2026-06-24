@@ -27,14 +27,14 @@ with mlflow.start_run() as run:
     # Log model
     mlflow.xgboost.log_model(
         xgb_model=model, 
-        artifact_path="fraud_model",
-        registered_model_name="fraud_model"
+        artifact_path="intrusion_model",
+        registered_model_name="intrusion_model"
     )
     
     # Register Alias
     client = MlflowClient()
     # Δίνουμε λίγο χρόνο στο registry να ενημερωθεί
-    client.set_registered_model_alias("fraud_model", "Production", "1")
+    client.set_registered_model_alias("intrusion_model", "Production", "1")
     
     print("\n✅ ΕΠΙΤΥΧΙΑ!")
     print(f"✅ Το μοντέλο σώθηκε στο: {db_path}")

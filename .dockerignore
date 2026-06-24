@@ -1,5 +1,8 @@
+.git
 .venv
 __pycache__
-*.csv
-*.pkl
-.git
+mlruns
+mlflow.db*
+chroma_db
+data/*.csv
+data/*.parquet

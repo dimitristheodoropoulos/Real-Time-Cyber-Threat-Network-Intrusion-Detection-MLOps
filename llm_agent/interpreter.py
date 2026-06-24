@@ -1,12 +1,12 @@
 import requests
 
-def explain_prediction(amount, hour, is_fraud):
-    status = "flagged as FRAUD" if is_fraud == 1 else "cleared as NORMAL"
+def explain_prediction(amount, hour, is_intrusion):
+    status = "flagged as FRAUD" if is_intrusion == 1 else "cleared as NORMAL"
     
     prompt = f"""
-    You are a fraud expert. A transaction of {amount}€ at {hour}:00 was {status}.
+    You are a intrusion expert. A transaction of {amount}€ at {hour}:00 was {status}.
     Explain in one short sentence why this might be suspicious or safe.
-    Example: 'High amount during late night hours is a classic fraud pattern.'
+    Example: 'High amount during late night hours is a classic intrusion pattern.'
     """
     
     try:

@@ -2,6 +2,6 @@ global:
   scrape_interval: 5s # Κάθε 5 δευτερόλεπτα θα τραβάει metrics
 
 scrape_configs:
-  - job_name: 'fraud_detection_api'
+  - job_name: 'intrusion_detection_api'
     static_configs:
-      - targets: ['fraud-api:8000'] # Χρησιμοποιούμε το όνομα του service από το docker-compose
+      - targets: ['intrusion-api:8000'] # Χρησιμοποιούμε το όνομα του service από το docker-compose

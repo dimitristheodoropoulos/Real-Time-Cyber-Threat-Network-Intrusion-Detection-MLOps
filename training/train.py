@@ -1,5 +1,5 @@
 """
-Fraud Detection - Production Training Pipeline
+Network Intrusion Detection - Production Training Pipeline
 Distributed Spark + XGBoost + MLflow Model Registry
 """
 
@@ -18,101 +18,98 @@ from sklearn.metrics import (
     recall_score, f1_score, confusion_matrix
 )
 
-# Configuration από Environment Variables (MLOps Best Practice)
-MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "sqlite:////app/mlflow.db")
-SPARK_MASTER = os.getenv("SPARK_MASTER_URL", "spark://spark-master:7077")
-DATA_PATH = "/app/data/processed_transactions.parquet"
+# Configuration με δυναμικά fallbacks για τοπικό .venv και Docker compatibility
+MLFLOW_URI = os.getenv("MLFLOW_TRACKING_URI", "sqlite:///mlflow.db")
+SPARK_MASTER = os.getenv("SPARK_MASTER_URL", "local[*]")
+DATA_PATH = os.getenv("DATA_PATH", "data/processed_network_logs.parquet")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def load_data_distributed():
-    """Φόρτωση δεδομένων χρησιμοποιώντας τον Spark Cluster."""
-    logger.info(f"Connecting to Spark Master: {SPARK_MASTER}")
+    """Φόρτωση δεδομένων μεγάλης κλίμακας μέσω Spark (Parquet optimization)."""
+    logger.info(f"Connecting to Mission Infrastructure Spark Master: {SPARK_MASTER}")
     spark = SparkSession.builder \
-        .appName("FraudProductionTraining") \
+        .appName("NetworkIntrusionProductionTraining") \
         .master(SPARK_MASTER) \
         .config("spark.executor.memory", "1g") \
         .config("spark.driver.memory", "1g") \
         .getOrCreate()
 
     try:
-        logger.info(f"Reading Parquet from: {DATA_PATH}")
+        logger.info(f"Reading Structured Parquet from: {DATA_PATH}")
         df_spark = spark.read.parquet(DATA_PATH)
-        # Μετατροπή σε Pandas για το XGBoost (σε μεγάλα δεδομένα θα χρησιμοποιούσαμε Spark ML)
         df = df_spark.toPandas()
         return df
     finally:
         spark.stop()
 
 def prepare_features(df):
-    """Feature engineering & Preprocessing."""
-    # Label Encoding για το Merchant Category
-    if 'merchant_category' in df.columns:
-        df["merchant_category_enc"] = pd.Categorical(df["merchant_category"]).codes
+    """Feature engineering για Network Packets."""
+    # Αν το protocol_type έρχεται ως string (κατηγορική), το μετατρέπουμε σε κωδικοποιημένο ακέραιο
+    if 'protocol_type' in df.columns and 'protocol_type_enc' not in df.columns:
+        df["protocol_type_enc"] = pd.Categorical(df["protocol_type"]).codes
+    elif 'protocol_type_enc' not in df.columns:
+        df["protocol_type_enc"] = 0
     
-    feature_cols = ["amount", "hour", "day_of_week", "merchant_category_enc"]
+    feature_cols = ["packet_size", "hour", "day_of_week", "protocol_type_enc"]
     X = df[feature_cols].fillna(0)
-    y = df["is_fraud"]
+    y = df["is_intrusion"]
     
     return X, y, feature_cols
 
 def train_production_model():
-    """Main Training & Registration Pipeline."""
+    """Main Training & Automated Model Registration."""
     mlflow.set_tracking_uri(MLFLOW_URI)
-    mlflow.set_experiment("fraud_detection_prod")
+    mlflow.set_experiment("network_intrusion_detection_prod")
 
-    with mlflow.start_run(run_name="XGBoost_Production_Run") as run:
-        # 1. Load & Prep
+    with mlflow.start_run(run_name="XGBoost_Cyber_Edge_Run") as run:
         df = load_data_distributed()
         X, y, feature_cols = prepare_features(df)
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=42, stratify=y
         )
 
-        # 2. Hyperparameters με scale_pos_weight για imbalanced data (Fraud)
         params = {
             "n_estimators": 150,
             "max_depth": 5,
             "learning_rate": 0.05,
-            "scale_pos_weight": int(y.value_counts()[0] / y.value_counts()[1]),
+            "scale_pos_weight": int(y.value_counts()[0] / y.value_counts()[1]) if 1 in y.values else 1,
             "objective": "binary:logistic",
             "random_state": 42
         }
         mlflow.log_params(params)
 
-        # 3. Training
         model = xgb.XGBClassifier(**params)
         model.fit(X_train, y_train)
 
-        # 4. Evaluation & Financial Metrics
         y_pred = model.predict(X_test)
         y_prob = model.predict_proba(X_test)[:, 1]
         
         cm = confusion_matrix(y_test, y_pred)
-        # Υπολογισμός "Business Impact": Κόστος ανά False Positive (π.χ. $10 για customer support)
-        business_metric = cm[0][1] * 10 
+        
+        # Operational Metric: Εκτίμηση ανθρωποωρών που χάνονται στο SOC για triage False Alarms
+        soc_triage_overhead_mins = cm[0][1] * 15 
         
         metrics = {
-            "roc_auc": roc_auc_score(y_test, y_prob),
+            "roc_auc": roc_auc_score(y_test, y_prob) if len(np.unique(y_test)) > 1 else 1.0,
             "f1_score": f1_score(y_test, y_pred),
             "false_positives": cm[0][1],
-            "business_cost_fp": business_metric
+            "soc_triage_overhead_minutes": soc_triage_overhead_mins
         }
         mlflow.log_metrics(metrics)
 
-        # 5. Model Registration (Το κλειδί για το API)
-        # Καταγράφουμε το μοντέλο και του δίνουμε το όνομα 'fraud-model-prod'
+        # Model Registry
         mlflow.xgboost.log_model(
             model, 
             "model", 
-            registered_model_name="fraud-detection-model"
+            registered_model_name="network-intrusion-model"
         )
         
-        logger.info(f"✅ Run Complete. AUC: {metrics['roc_auc']:.4f} | Cost FP: ${business_metric}")
+        logger.info(f"✅ Training Complete. AUC: {metrics['roc_auc']:.4f} | SOC Overhead: {soc_triage_overhead_mins} mins")
         return run.info.run_id
 
 if __name__ == "__main__":
     run_id = train_production_model()
-    print(f"\n🚀 Pipeline Finished!")
-    print(f"Model registered in MLflow Registry. Run ID: {run_id}")
+    print(f"\n🚀 Production Pipeline Finished Successfully!")
+    print(f"Model deployed to MLflow Registry. Run ID: {run_id}")

@@ -1,8 +1,32 @@
+# Virtual Environment
 .venv/
+venv/
+env/
+
+# Python Caches & Compiled Files
 __pycache__/
-*.pyc
-.DS_Store
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Data Storage & Datasets (Raw, Processed, Parquet logs)
+data/*.csv
+data/*.parquet
+*.csv
+*.parquet
+
+# MLflow Local Tracking & Registry State
 mlruns/
+mlflow.db*
+
+# Vector Database Local Binaries (ChromaDB)
 chroma_db/
-*.db
-.env
+
+# IDEs and System Garbage
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary Architecture Notes
+project_structure.txt
