@@ -79,6 +79,13 @@ def list_pending():
     return [dict(row) for row in rows]
 
 
+def get_approval(entry_id: str):
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM approvals WHERE id = ?", (entry_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
 def approve_entry(entry_id: str, reviewer: str, comments: str = ""):
     conn = get_connection()
     conn.execute(
