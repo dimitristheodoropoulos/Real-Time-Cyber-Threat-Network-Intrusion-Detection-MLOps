@@ -1,9 +1,10 @@
+from .config import APPROVALS_DB_PATH
 import sqlite3
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel
 
-DB_PATH = "approvals.db"
+DB_PATH = APPROVALS_DB_PATH
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)

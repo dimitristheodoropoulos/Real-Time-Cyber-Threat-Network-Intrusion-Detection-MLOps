@@ -1,10 +1,9 @@
+from .config import OLLAMA_URL, OLLAMA_MODEL
 import requests
 import json
 from typing import Optional
 from .insights import generate_insight
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL = "llama3"   # ή "phi3"
 
 def generate_llm_insight(entry: dict) -> dict:
     """

@@ -1,9 +1,10 @@
+from .config import WEBHOOKS_DB_PATH
 import sqlite3
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional, List
 
-DB_PATH = "webhooks.db"
+DB_PATH = WEBHOOKS_DB_PATH
 
 def get_connection():
     conn = sqlite3.connect(DB_PATH)

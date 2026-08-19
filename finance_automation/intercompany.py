@@ -52,8 +52,8 @@ def match_intercompany(request: IntercompanyMatchRequest) -> IntercompanyMatchRe
                 if amount_matches(a.amount, b.amount, request.amount_tolerance):
                     if days_between(a.date, b.date) <= request.date_tolerance_days:
                         matched.append({
-                            "A_transaction": a.dict(),
-                            "B_transaction": b.dict(),
+                            "A_transaction": a.model_dump(),
+                            "B_transaction": b.model_dump(),
                             "confidence": 1.0,
                             "reason": "Reference + amount + date match"
                         })
@@ -62,8 +62,8 @@ def match_intercompany(request: IntercompanyMatchRequest) -> IntercompanyMatchRe
                         break
                     else:
                         mismatched.append({
-                            "A_transaction": a.dict(),
-                            "B_transaction": b.dict(),
+                            "A_transaction": a.model_dump(),
+                            "B_transaction": b.model_dump(),
                             "issue": "Same reference and amount but date outside tolerance",
                             "difference_days": days_between(a.date, b.date)
                         })
@@ -72,8 +72,8 @@ def match_intercompany(request: IntercompanyMatchRequest) -> IntercompanyMatchRe
                         break
                 else:
                     mismatched.append({
-                        "A_transaction": a.dict(),
-                        "B_transaction": b.dict(),
+                        "A_transaction": a.model_dump(),
+                        "B_transaction": b.model_dump(),
                         "issue": "Same reference but different amount",
                         "amount_difference": round(a.amount - b.amount, 2)
                     })
