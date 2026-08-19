@@ -1,0 +1,23 @@
+# Core API & Data
+fastapi
+uvicorn[standard]
+pydantic
+pandas
+numpy
+sqlalchemy
+
+# File parsing & Excel/CSV
+openpyxl
+python-multipart
+python-dateutil
+
+# HTTP requests για integrations / public APIs
+requests
+
+# Testing (καλό να υπάρχει από την αρχή)
+pytest
+httpx
+
+# Optional: Dashboards (αν θες Streamlit αντί για React)
+# streamlit
+# plotlypython-multipart
