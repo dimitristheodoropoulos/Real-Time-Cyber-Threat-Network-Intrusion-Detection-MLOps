@@ -1,76 +1,247 @@
-# 🛡️ Real-Time Cyber Threat & Network Intrusion Detection MLOps Platform
+# Finance Automation & AI Platform
 
-Μια ολοκληρωμένη παραγωγική πλατφόρμα ανίχνευσης κυβερνοαπειλών και εισβολών δικτύου (Network Intrusion Detection) σχεδιασμένη για περιβάλλοντα υψηλής διαθεσιμότητας και αυστηρής ασφάλειας (Mission-Critical / Defense environments). Καλύπτει πλήρως όλο τον κύκλο ζωής (End-to-End Lifecycle) ενός μοντέλου Μηχανικής Μάθησης: από το distributed ingestion και το tracking, μέχρι το production deployment, το continuous observability και το Air-Gapped Explainable AI (XAI).
+An end-to-end finance automation platform built with **FastAPI**, **SQLite**, **Pandas**, and **Streamlit**, designed to transform manual month-end close processes into autonomous, data-driven workflows. The platform automates reconciliations, intercompany matching, anomaly detection, journal entry generation, and human-in-the-loop approvals, while providing AI-powered insights through local LLMs with rule-based fallback.
+
+> **Secondary project:** This repository also contains a real-time cyber threat & network intrusion detection MLOps platform (see bottom section), demonstrating additional MLOps and engineering capabilities.
 
 ---
 
-## 🚀 Key Features
+## ✨ Key Features
 
-* **Distributed Big Data Layer (Spark & Parquet):** Feature engineering και ingestion pipelines αναπτυγμένα σε **PySpark**, βελτιστοποιημένα για αποθήκευση σε **Parquet format** με Snappy compression. Σχεδιασμένο για scale-out διαχείριση δισεκατομμυρίων network logs (NetFlow/PCAP telemetry) και βέλτιστο analytical query performance.
-* **Mission-Ready Hybrid Inference Engine:** Ενσωματωμένος μηχανισμός ανθεκτικότητας (Graceful Degradation). Σε περίπτωση αστοχίας ή αποσύνδεσης από το MLflow registry, το API μεταπίπτει αυτόματα σε ντετερμινιστικούς κανόνες ασφαλείας (Rule-based fallback mode) για διασφάλιση 100% uptime του δικτύου.
-* **Air-Gapped & Secure Explainable AI (XAI):** On-premise ενοποίηση με Local LLM (Phi-3 μέσω Ollama). Παρέχει επεξηγήσεις σε φυσική γλώσσα για κάθε "Malicious" alert, εξασφαλίζοντας **μηδενική διαρροή δεδομένων** εκτός του απομονωμένου αμυντικού δικτύου (Data Security & Sovereignty compliance).
-* **Revision-Compliant CI/CD Workflows:** Πλήρως αυτοματοποιημένα pipelines μέσω GitHub Actions:
-    * **CI:** Αυτοματοποιημένο linting (Flake8) και unit testing (Pytest) με προεγκατεστημένο Java environment για την επικύρωση των PySpark workloads.
-    * **CD:** Docker image building και automated versioning/tagging στο Docker Hub με βάση τα Git Tags (`v*`), εξασφαλίζοντας revision-compliant provisioning.
-* **Canary & Staging Traffic Splitting:** Ενσωματωμένη δυνατότητα A/B testing και σταδιακής διοχέτευσης της real-time κίνησης (Production vs Staging μοντέλο) με βάση το MD5 hashing του `source_ip_hash`.
-* **Observability & SOC Metrics:** Έκθεση native metrics σε μορφή Prometheus. Περιλαμβάνει metrics για τον υπολογισμό του **SOC Triage Overhead** (εκτίμηση ανθρωποωρών που εξοικονομούνται στο Security Operations Center από τη μείωση των False Positives).
+### 1. Bank vs GL Reconciliation
+- JSON and CSV/Excel upload.
+- Fuzzy matching on amount, date, reference, and description.
+- Outputs: matched, unmatched_bank, unmatched_gl, suggested_matches.
+- Configurable tolerance for amount and date.
+
+### 2. Intercompany Matching
+- Transaction matching between group companies.
+- Detects matched, mismatched, unmatched_A, unmatched_B.
+- Suggests matches based on amount when references are missing.
+
+### 3. Anomaly Detection
+- Duplicate payments.
+- Large round-dollar amounts.
+- Benford's Law deviations.
+- Unusual posting times (weekend/night).
+- Missing descriptions.
+
+### 4. Journal Entry Generation
+- Automatically generates proposed journal entries for:
+  - Unmatched bank/GL transactions.
+  - Mismatches between intercompany entities.
+- Uses clearing, suspense, and write-off accounts.
+
+### 5. Human-in-the-loop Approvals
+- SQLite-backed workflow with statuses: `pending`, `approved`, `rejected`.
+- Audit trail: reviewer, reviewed_at, comments.
+- API endpoints for approve/reject actions.
+
+### 6. Insights & AI Recommendations
+- Rule-based insights for each approval entry (risk level, recommendation, reasoning).
+- Optional LLM-powered insights via Ollama (default `llama3`), with automatic fallback to rule-based if Ollama is unavailable.
+
+### 7. Webhook Receiver
+- Accepts transaction payloads from external systems (ERP, payment gateways).
+- Stores events in SQLite with source and received timestamp.
+
+### 8. Streamlit Dashboard
+- User-friendly UI for:
+  - Viewing and approving/rejecting pending entries.
+  - Uploading CSV files for reconciliation.
+  - Running intercompany matching.
+  - Checking service health.
 
 ---
 
 ## 🛠️ Architecture Overview
 
-* **Data & Storage Layer:** Distributed Ingestion μέσω PySpark. Αποθήκευση σε Columnar Parquet αρχεία για ελαχιστοποίηση του storage footprint στο Edge.
-* **Model Management Layer:** MLflow Tracking & Model Registry για την παρακολούθηση πειραμάτων, αρχιτεκτονικών (XGBoost) και αυστηρό version control των μοντέλων.
-* **Serving Layer:** Containerized FastAPI Web Service (Uvicorn) βελτιστοποιημένο για low-latency real-time inference.
-* **Security & XAI Layer:** Local Ollama Service (Air-Gapped deployment).
-* **Automation Layer:** GitHub Actions (CI/CD) & Prometheus Telemetry.
+| Layer | Technology |
+|-------|------------|
+| API | FastAPI (Uvicorn) |
+| Database | SQLite (approvals, webhook events) |
+| Data processing | Pandas, Python standard library |
+| Dashboard | Streamlit |
+| AI/LLM | Ollama (optional), rule-based fallback |
+| Testing | pytest, FastAPI TestClient |
 
 ---
 
-## 📦 Installation & Setup
+## 📡 API Endpoints
 
-### 1. Clone the Repository
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Service health check |
+| POST | `/reconcile` | Bank vs GL reconciliation (JSON) |
+| POST | `/reconcile/upload` | Upload CSV/Excel bank & GL files |
+| POST | `/intercompany/match` | Intercompany transaction matching |
+| POST | `/journal-entries/generate` | Generate proposed journal entries |
+| GET | `/approvals/pending` | List pending approvals |
+| POST | `/approvals/{entry_id}/approve` | Approve entry |
+| POST | `/approvals/{entry_id}/reject` | Reject entry |
+| GET | `/approvals/{entry_id}/insights` | Rule-based approval insights |
+| GET | `/approvals/{entry_id}/llm-insights` | LLM-based insights (fallback to rules) |
+| POST | `/anomalies` | Detect anomalies in GL transactions |
+| POST | `/webhooks/transactions` | Receive external transactions |
+| GET | `/webhooks/events` | List webhook events |
 
-git clone [https://github.com/your-username/network-intrusion-detection-mlops.git](https://github.com/your-username/network-intrusion-detection-mlops.git)
-cd network-intrusion-detection-mlops
+---
 
-2. Build and Run the Mission Service
-Η πλατφόρμα υποστηρίζει πλήρες containerized deployment. Για να σηκώσετε το API endpoint τοπικά:
+## 🚀 Getting Started
 
-# Build the revision-compliant image
-sudo docker build -t network-intrusion-api -f Dockerfile .
+### 1. Clone the repository
 
-# Run the mission-ready service
-sudo docker run -d \
-  --name intrusion-api-service \
-  -p 8000:8000 \
-  -e PYTHONPATH=/app \
-  network-intrusion-api
+```bash
+git clone https://github.com/dimitristheodoropoulos/Real-Time-Cyber-Threat-Network-Intrusion-Detection-MLOps.git
+cd Real-Time-Cyber-Threat-Network-Intrusion-Detection-MLOps
+```
 
-  📡 API Usage
-Health & Failover Mode Status
-curl http://localhost:8000/health
+### 2. Create virtual environment
 
-Real-Time Network Log Evaluation (Inference)
-curl -X POST http://localhost:8000/predict \
-     -H "Content-Type: application/json" \
-     -d '{
-       "source_ip_hash": "a1b2c3d4e5f67890",
-       "packet_size": 65535.0,
-       "protocol_type_enc": 1,
-       "timestamp": "2026-06-23T18:15:00"
-     }'
+```bash
+python3 -m venv venv
+source venv/bin/activate      # Windows: venv\Scripts\activate
+```
 
-📈 Monitoring & Mission Observability
-Το API εκθέτει live τηλεμετρία στη διεύθυνση http://localhost:8000/metrics. Τα metrics είναι πλήρως συμβατά με Prometheus και έτοιμα για σύνδεση με Grafana Dashboards, επιτρέποντας στους Cyber Security Analysts να παρακολουθούν:
+### 3. Install dependencies
 
-Το πλήθος των απειλών ανά variant (Staging vs Prod).
+```bash
+pip install -r requirements_finance.txt
+```
 
-Το ποσοστό ενεργοποίησης του Failover Logic.
+If you plan to use LLM insights, install Ollama and pull a model (e.g., `llama3`). If Ollama is not running, the API automatically falls back to rule-based insights.
 
-Τα στατιστικά κατανομής μεγέθους πακέτων (DDoS/Exfiltration indicators).
+### 4. Run the API
 
-🛡️ Resilience & Engineering Excellence
-Το project υλοποιεί την αρχή του Graceful Degradation. Σε αμυντικά συστήματα (C2/Cyber Defense), η διαθεσιμότητα είναι εξίσου κρίσιμη με την ακρίβεια. Αν το MLflow artifact store καταστεί μη διαθέσιμο (π.χ. network partition), το σύστημα ενεργοποιεί ένα εσωτερικό DummyModel βασισμένο σε heuristics και κανόνες ορίων (π.χ. Packet Size Validation για Ping of Death attacks), εξασφαλίζοντας ότι η ροή ελέγχου δεν θα διακοπεί ποτέ.
+```bash
+uvicorn finance_automation.main:app --reload
+```
 
-Developed by Dimitris Theodoropoulos | MLOps Engineer 🚀
+The API will be available at `http://127.0.0.1:8000`.
+
+### 5. Run the dashboard (optional)
+
+In another terminal:
+
+```bash
+streamlit run finance_automation/dashboard.py
+```
+
+### 6. Run tests
+
+```bash
+pytest tests/
+```
+
+---
+
+## 📦 Example Usage
+
+### Reconciliation (JSON)
+
+```bash
+curl -X POST http://127.0.0.1:8000/reconcile \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bank_transactions": [
+      {"id": "B1", "date": "2026-03-01", "amount": 1000.00, "description": "Payment to supplier", "reference": "INV-1001"}
+    ],
+    "gl_transactions": [
+      {"id": "GL1", "date": "2026-03-01", "amount": 1000.00, "description": "Supplier invoice", "reference": "INV-1001"}
+    ],
+    "amount_tolerance": 0.01,
+    "date_tolerance_days": 3
+  }'
+```
+
+### Anomaly Detection
+
+```bash
+curl -X POST http://127.0.0.1:8000/anomalies \
+  -H "Content-Type: application/json" \
+  -d '[
+    {"id": "J1", "date": "2026-03-05", "amount": 5000.00, "description": "Consulting fees", "posted_at": "2026-03-05T23:30:00"},
+    {"id": "J2", "date": "2026-03-06", "amount": 5000.00, "description": "Consulting fees", "posted_at": "2026-03-06T09:00:00"}
+  ]'
+```
+
+### Webhook
+
+```bash
+curl -X POST http://127.0.0.1:8000/webhooks/transactions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source": "stripe",
+    "transactions": [
+      {"id": "txn_001", "amount": 1000.00, "currency": "EUR", "description": "Payment for invoice 123"}
+    ]
+  }'
+```
+
+---
+
+## 🧠 LLM Integration (Optional)
+
+The platform can use a local LLM (e.g., Ollama with `llama3`) to generate richer approval insights. If Ollama is not available, it falls back to deterministic rule-based recommendations, ensuring the system remains functional in any environment.
+
+---
+
+## 🧪 Tests
+
+All core endpoints are covered by pytest tests:
+
+```bash
+pytest tests/
+```
+
+---
+
+## 🛡️ Resilience & Engineering
+
+The platform follows the principle of **graceful degradation**:
+- LLM features automatically fall back to rule-based logic if the local model is unavailable.
+- SQLite databases are local and can be recreated automatically.
+- API errors return structured JSON with HTTP status codes.
+
+---
+
+## 📂 Project Structure
+
+```
+finance_automation/
+├── main.py               # FastAPI app & endpoints
+├── reconciliation.py     # Bank vs GL matching logic
+├── intercompany.py       # Intercompany matching
+├── journal_entries.py    # Proposed journal entries
+├── approvals.py          # Human-in-the-loop approvals (SQLite)
+├── anomaly.py            # Anomaly detection rules
+├── insights.py           # Rule-based approval insights
+├── llm_helper.py         # LLM integration with fallback
+├── webhooks.py           # Webhook receiver & event store
+├── config.py             # Environment configuration
+└── dashboard.py          # Streamlit dashboard
+```
+
+---
+
+## 🛡️ Cyber Threat & Network Intrusion Detection MLOps Platform (Secondary)
+
+This repository also includes a **real-time network intrusion detection MLOps platform** originally developed for mission-critical environments. It features:
+
+- Distributed data ingestion with PySpark and Parquet.
+- MLflow tracking and model registry.
+- FastAPI inference with graceful degradation.
+- Air-gapped LLM explanations via Ollama/Phi-3.
+- CI/CD workflows with GitHub Actions.
+- Prometheus metrics for SOC observability.
+
+### Running the Intrusion Detection API
+
+```bash
+docker build -t network-intrusion-api -f Dockerfile .
+docker run -d --name intrusion-api-service -p 8000:8000 -e PYTHONPATH=/app network-intrusion-api
+```
+
+---
+
+Developed by Dimitris Theodoropoulos | Finance Automation & MLOps Engineer 🚀
