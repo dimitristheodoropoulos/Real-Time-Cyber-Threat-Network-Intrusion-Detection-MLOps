@@ -5,6 +5,7 @@ from datetime import date, datetime
 import math
 import pandas as pd
 import io
+import logging
 
 from .intercompany import (
     IntercompanyTransaction,
@@ -37,7 +38,14 @@ from .webhooks import (
 )
 from .llm_helper import generate_llm_insight
 
-app = FastAPI(title="Finance Automation API", version="0.7.0")
+# Logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="Finance Automation API", version="0.8.0")
 
 
 # ---------- Pydantic Models ----------
@@ -112,8 +120,8 @@ def reconcile(request: ReconciliationRequest) -> ReconciliationResult:
                     desc_sim = description_similarity(b.description, g.description)
                     if ref_match or desc_sim >= 0.7:
                         matched.append({
-                            "bank_transaction": b.dict(),
-                            "gl_transaction": g.dict(),
+                            "bank_transaction": b.model_dump(),
+                            "gl_transaction": g.model_dump(),
                             "confidence": 1.0 if ref_match else 0.9,
                             "reason": "Exact amount/date + reference/description"
                         })
@@ -217,14 +225,17 @@ def parse_gl_file(file: UploadFile) -> List[GLTransaction]:
 # ---------- Endpoints ----------
 @app.get("/health")
 def health():
+    logger.info("Health check performed")
     return {"status": "ok", "service": "finance-automation"}
 
 
 @app.post("/reconcile", response_model=ReconciliationResult)
 def reconcile_endpoint(request: ReconciliationRequest):
+    logger.info(f"Reconciliation request received: {len(request.bank_transactions)} bank, {len(request.gl_transactions)} GL")
     try:
         return reconcile(request)
     except Exception as e:
+        logger.error(f"Reconciliation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -235,9 +246,11 @@ def reconcile_upload_endpoint(
     amount_tolerance: float = 0.01,
     date_tolerance_days: int = 3
 ):
+    logger.info("Reconciliation upload request received")
     try:
         bank_transactions = parse_bank_file(bank_file)
         gl_transactions = parse_gl_file(gl_file)
+        logger.info(f"Parsed {len(bank_transactions)} bank and {len(gl_transactions)} GL transactions")
         request = ReconciliationRequest(
             bank_transactions=bank_transactions,
             gl_transactions=gl_transactions,
@@ -246,50 +259,64 @@ def reconcile_upload_endpoint(
         )
         return reconcile(request)
     except Exception as e:
+        logger.error(f"Reconciliation upload failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/intercompany/match", response_model=IntercompanyMatchResult)
 def intercompany_match_endpoint(request: IntercompanyMatchRequest):
+    logger.info(f"Intercompany matching request: {len(request.transactions_A)} A, {len(request.transactions_B)} B")
     try:
         return match_intercompany(request)
     except Exception as e:
+        logger.error(f"Intercompany matching failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/journal-entries/generate", response_model=JournalEntryResponse)
 def journal_entries_endpoint(request: JournalEntryRequest):
+    logger.info("Journal entry generation request received")
     try:
         result = generate_entries(request)
         store_pending_entries(result.entries)
+        logger.info(f"Generated {len(result.entries)} journal entries and stored as pending")
         return result
     except Exception as e:
+        logger.error(f"Journal entry generation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/approvals/pending")
 def approvals_pending():
+    logger.info("Fetching pending approvals")
     return list_pending()
 
 
 @app.post("/approvals/{entry_id}/approve")
 def approvals_approve(entry_id: str, reviewer: str = "default_user", comments: str = ""):
+    logger.info(f"Approving entry {entry_id} by {reviewer}")
     success = approve_entry(entry_id, reviewer, comments)
     if not success:
+        logger.warning(f"Approval failed for {entry_id}")
         raise HTTPException(status_code=404, detail="Entry not found or already processed")
+    logger.info(f"Entry {entry_id} approved")
     return {"message": "Entry approved"}
 
 
 @app.post("/approvals/{entry_id}/reject")
 def approvals_reject(entry_id: str, reviewer: str = "default_user", comments: str = ""):
+    logger.info(f"Rejecting entry {entry_id} by {reviewer}")
     success = reject_entry(entry_id, reviewer, comments)
     if not success:
+        logger.warning(f"Rejection failed for {entry_id}")
         raise HTTPException(status_code=404, detail="Entry not found or already processed")
+    logger.info(f"Entry {entry_id} rejected")
     return {"message": "Entry rejected"}
 
 
 @app.get("/approvals/{entry_id}/insights")
 def approval_insights(entry_id: str):
+    logger.info(f"Fetching rule-based insights for {entry_id}")
     entry = get_approval(entry_id)
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
@@ -298,27 +325,33 @@ def approval_insights(entry_id: str):
 
 @app.post("/anomalies")
 def anomalies_endpoint(transactions: List[GLTransaction]):
-    trans_dicts = [t.dict() for t in transactions]
+    logger.info(f"Anomaly detection request: {len(transactions)} transactions")
+    trans_dicts = [t.model_dump() for t in transactions]
     flags = run_anomaly_detection(trans_dicts)
+    logger.info(f"Anomaly detection found {len(flags)} flags")
     return {"flags": flags, "count": len(flags)}
 
 
 @app.post("/webhooks/transactions")
 def webhook_transactions(payload: WebhookPayload):
+    logger.info(f"Webhook received from {payload.source} with {len(payload.transactions)} transactions")
     try:
-        store_webhook_event(payload.source, payload.dict())
+        store_webhook_event(payload.source, payload.model_dump())
         return {"message": "Webhook received", "source": payload.source, "count": len(payload.transactions)}
     except Exception as e:
+        logger.error(f"Webhook processing failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/webhooks/events")
 def webhook_events(source: Optional[str] = None):
+    logger.info(f"Fetching webhook events (source={source})")
     return list_webhook_events(source)
 
 
 @app.get("/approvals/{entry_id}/llm-insights")
 def approval_llm_insights(entry_id: str):
+    logger.info(f"Fetching LLM insights for {entry_id}")
     entry = get_approval(entry_id)
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
