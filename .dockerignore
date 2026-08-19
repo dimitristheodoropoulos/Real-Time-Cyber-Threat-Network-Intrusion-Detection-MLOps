@@ -1,8 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
 .git
-.venv
-__pycache__
-mlruns
-mlflow.db*
-chroma_db
-data/*.csv
-data/*.parquet
+.gitignore
+approvals.db
+webhooks.db
+data/
