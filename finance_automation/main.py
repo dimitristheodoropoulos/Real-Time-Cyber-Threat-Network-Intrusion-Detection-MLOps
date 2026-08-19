@@ -20,6 +20,13 @@ from .journal_entries import (
     generate_entries
 )
 
+from .approvals import (
+    store_pending_entries,
+    list_pending,
+    approve_entry,
+    reject_entry
+)
+
 app = FastAPI(title="Finance Automation API", version="0.4.0")
 
 
@@ -240,6 +247,26 @@ def intercompany_match_endpoint(request: IntercompanyMatchRequest):
 @app.post("/journal-entries/generate", response_model=JournalEntryResponse)
 def journal_entries_endpoint(request: JournalEntryRequest):
     try:
-        return generate_entries(request)
+        result = generate_entries(request)
+        store_pending_entries(result.entries)   # <-- προσθήκη
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/approvals/pending")
+def approvals_pending():
+    return list_pending()
+
+@app.post("/approvals/{entry_id}/approve")
+def approvals_approve(entry_id: str, reviewer: str = "default_user", comments: str = ""):
+    success = approve_entry(entry_id, reviewer, comments)
+    if not success:
+        raise HTTPException(status_code=404, detail="Entry not found or already processed")
+    return {"message": "Entry approved"}
+
+@app.post("/approvals/{entry_id}/reject")
+def approvals_reject(entry_id: str, reviewer: str = "default_user", comments: str = ""):
+    success = reject_entry(entry_id, reviewer, comments)
+    if not success:
+        raise HTTPException(status_code=404, detail="Entry not found or already processed")
+    return {"message": "Entry rejected"}

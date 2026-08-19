@@ -30,3 +30,6 @@ Thumbs.db
 
 # Temporary Architecture Notes
 project_structure.txt
+
+# Local approvals database
+approvals.db
