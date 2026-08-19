@@ -33,3 +33,4 @@ project_structure.txt
 
 # Local approvals database
 approvals.db
+webhooks.db

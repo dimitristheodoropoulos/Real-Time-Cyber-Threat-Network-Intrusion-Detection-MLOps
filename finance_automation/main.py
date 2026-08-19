@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, File, UploadFile
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 import math
 import pandas as pd
 import io
@@ -25,12 +25,19 @@ from .approvals import (
     list_pending,
     approve_entry,
     reject_entry,
-    get_approval            # <-- ΝΕΑ ΠΡΟΣΘΗΚΗ
+    get_approval
 )
 
-from .insights import generate_insight   # <-- ΝΕΑ ΠΡΟΣΘΗΚΗ
+from .insights import generate_insight
+from .anomaly import run_anomaly_detection
+from .webhooks import (
+    WebhookPayload,
+    store_webhook_event,
+    list_webhook_events
+)
+from .llm_helper import generate_llm_insight
 
-app = FastAPI(title="Finance Automation API", version="0.5.0")
+app = FastAPI(title="Finance Automation API", version="0.7.0")
 
 
 # ---------- Pydantic Models ----------
@@ -48,6 +55,8 @@ class GLTransaction(BaseModel):
     amount: float
     description: str = ""
     reference: Optional[str] = None
+    posted_at: Optional[datetime] = None
+    user: Optional[str] = None
 
 
 class ReconciliationRequest(BaseModel):
@@ -285,3 +294,32 @@ def approval_insights(entry_id: str):
     if not entry:
         raise HTTPException(status_code=404, detail="Entry not found")
     return generate_insight(entry)
+
+
+@app.post("/anomalies")
+def anomalies_endpoint(transactions: List[GLTransaction]):
+    trans_dicts = [t.dict() for t in transactions]
+    flags = run_anomaly_detection(trans_dicts)
+    return {"flags": flags, "count": len(flags)}
+
+
+@app.post("/webhooks/transactions")
+def webhook_transactions(payload: WebhookPayload):
+    try:
+        store_webhook_event(payload.source, payload.dict())
+        return {"message": "Webhook received", "source": payload.source, "count": len(payload.transactions)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/webhooks/events")
+def webhook_events(source: Optional[str] = None):
+    return list_webhook_events(source)
+
+
+@app.get("/approvals/{entry_id}/llm-insights")
+def approval_llm_insights(entry_id: str):
+    entry = get_approval(entry_id)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return generate_llm_insight(entry)
