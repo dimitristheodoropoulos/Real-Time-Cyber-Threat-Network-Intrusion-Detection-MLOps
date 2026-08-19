@@ -6,7 +6,14 @@ import math
 import pandas as pd
 import io
 
-app = FastAPI(title="Finance Automation API", version="0.3.0")
+from .intercompany import (
+    IntercompanyTransaction,
+    IntercompanyMatchRequest,
+    IntercompanyMatchResult,
+    match_intercompany
+)
+
+app = FastAPI(title="Finance Automation API", version="0.4.0")
 
 
 # ---------- Pydantic Models ----------
@@ -44,8 +51,10 @@ class ReconciliationResult(BaseModel):
 def amount_matches(a: float, b: float, tol: float) -> bool:
     return math.isclose(a, b, abs_tol=tol)
 
+
 def days_between(d1: date, d2: date) -> int:
     return abs((d1 - d2).days)
+
 
 def description_similarity(desc1: str, desc2: str) -> float:
     if not desc1 or not desc2:
@@ -57,6 +66,7 @@ def description_similarity(desc1: str, desc2: str) -> float:
     if d1 in d2 or d2 in d1:
         return 0.7
     return 0.0
+
 
 def reconcile(request: ReconciliationRequest) -> ReconciliationResult:
     bank = request.bank_transactions
@@ -142,10 +152,9 @@ def parse_bank_file(file: UploadFile) -> List[BankTransaction]:
         df = pd.read_csv(io.StringIO(content.decode('utf-8')))
     except Exception:
         df = pd.read_excel(io.BytesIO(content))
-    
-    # Καθαρισμός ονομάτων στηλών
+
     df.columns = [c.lower().strip() for c in df.columns]
-    
+
     transactions = []
     for _, row in df.iterrows():
         transactions.append(BankTransaction(
@@ -164,9 +173,9 @@ def parse_gl_file(file: UploadFile) -> List[GLTransaction]:
         df = pd.read_csv(io.StringIO(content.decode('utf-8')))
     except Exception:
         df = pd.read_excel(io.BytesIO(content))
-    
+
     df.columns = [c.lower().strip() for c in df.columns]
-    
+
     transactions = []
     for _, row in df.iterrows():
         transactions.append(GLTransaction(
@@ -210,5 +219,13 @@ def reconcile_upload_endpoint(
             date_tolerance_days=date_tolerance_days
         )
         return reconcile(request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/intercompany/match", response_model=IntercompanyMatchResult)
+def intercompany_match_endpoint(request: IntercompanyMatchRequest):
+    try:
+        return match_intercompany(request)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
