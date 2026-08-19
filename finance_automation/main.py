@@ -13,6 +13,13 @@ from .intercompany import (
     match_intercompany
 )
 
+from .journal_entries import (
+    ProposedJournalEntry,
+    JournalEntryRequest,
+    JournalEntryResponse,
+    generate_entries
+)
+
 app = FastAPI(title="Finance Automation API", version="0.4.0")
 
 
@@ -227,5 +234,12 @@ def reconcile_upload_endpoint(
 def intercompany_match_endpoint(request: IntercompanyMatchRequest):
     try:
         return match_intercompany(request)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/journal-entries/generate", response_model=JournalEntryResponse)
+def journal_entries_endpoint(request: JournalEntryRequest):
+    try:
+        return generate_entries(request)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
