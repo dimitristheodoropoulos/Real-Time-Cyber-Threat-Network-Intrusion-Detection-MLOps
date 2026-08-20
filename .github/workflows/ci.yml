@@ -15,26 +15,27 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.10'   # Σύσταση: 3.10 για συμβατότητα με όλες τις βιβλιοθήκες
 
-      # ΚΡΙΣΙΜΟ: Εγκατάσταση Java για να μπορεί να τρέξει ο PySpark κατά τα tests
-      - name: Set up Java for PySpark Workloads
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
+      # Java ΔΕΝ χρειάζεται για το Finance Automation project
+      # (μόνο αν τρέχεις tests για το secondary intrusion detection)
+      # Αν το secondary project έχει δικά του tests, καλύτερα να τα χωρίσεις σε ξεχωριστά jobs.
+      # - name: Set up Java for PySpark Workloads
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     distribution: 'temurin'
+      #     java-version: '17'
           
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install flake8 pytest
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements_finance.txt ]; then pip install -r requirements_finance.txt; fi
           
       - name: Lint with flake8
         run: |
-          # Σταματάει αν υπάρχουν Python syntax errors ή undefined names
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 finance_automation/ --count --select=E9,F63,F7,F82 --show-source --statistics
           
-      - name: Test Infrastructure with pytest
+      - name: Run tests
         run: |
-          pytest
+          pytest tests/ -v   # Συγκεκριμένος φάκελος tests, με verbose output
