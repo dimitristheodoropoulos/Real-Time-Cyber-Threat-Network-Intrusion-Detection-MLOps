@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.finance
+    container_name: finance-automation-api
+    ports:
+      - "8000:8000"
+    environment:
+      - APPROVALS_DB_PATH=/app/data/approvals.db
+      - WEBHOOKS_DB_PATH=/app/data/webhooks.db
+      - OLLAMA_URL=http://ollama:11434/api/generate
+      - OLLAMA_MODEL=llama3
+    volumes:
+      - ./data:/app/data
+    networks:
+      - finance-net
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.finance
+    container_name: finance-automation-dashboard
+    command: streamlit run finance_automation/dashboard.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      - api
+    networks:
+      - finance-net
+
+networks:
+  finance-net:
+    driver: bridge

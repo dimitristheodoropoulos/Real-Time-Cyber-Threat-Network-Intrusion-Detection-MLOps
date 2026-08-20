@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic
+pandas
+numpy
+sqlalchemy
+openpyxl
+python-multipart
+python-dateutil
+requests
+httpx
+streamlit
+pytest

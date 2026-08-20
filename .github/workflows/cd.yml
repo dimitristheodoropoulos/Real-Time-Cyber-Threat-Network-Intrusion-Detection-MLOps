@@ -3,7 +3,7 @@ name: CD Pipeline
 on:
   push:
     tags:
-      - 'v*' # Τρέχει όταν κάνεις git tag (π.χ. git tag v1.0.0 && git push origin v1.0.0)
+      - 'v*'
 
 jobs:
   build-and-push:
@@ -21,9 +21,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: ./Dockerfile # Διορθώθηκε με βάση το project tree σου
+          file: ./Dockerfile   # Βεβαιώσου ότι υπάρχει Dockerfile στο root
           push: true
-          # Κάνει push δύο tags: το :latest ΚΑΙ το συγκεκριμένο version tag (π.χ. :v1.0.0)
           tags: |
-            your-dockerhub-username/network-intrusion-api:latest
-            your-dockerhub-username/network-intrusion-api:${{ github.ref_name }}
+            dimitristheodoropoulos/finance-automation-api:latest
+            dimitristheodoropoulos/finance-automation-api:${{ github.ref_name }}
