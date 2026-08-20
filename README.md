@@ -1,8 +1,8 @@
 # Finance Automation & AI Platform
 
-An end-to-end finance automation platform built with **FastAPI**, **SQLite**, **Pandas**, and **Streamlit**, designed to transform manual month-end close processes into autonomous, data-driven workflows. The platform automates reconciliations, intercompany matching, anomaly detection, journal entry generation, and human-in-the-loop approvals, while providing AI-powered insights through local LLMs with rule-based fallback.
+An end-to-end finance automation platform built with **FastAPI**, **SQLite**, **Pandas**, and **Streamlit**, designed to transform manual month‑end close processes into autonomous, data‑driven workflows. The platform automates reconciliations, intercompany matching, anomaly detection, journal entry generation, and human‑in‑the‑loop approvals, while providing AI‑powered insights through local LLMs with rule‑based fallback.
 
-> **Secondary project:** This repository also contains a real-time cyber threat & network intrusion detection MLOps platform (see bottom section), demonstrating additional MLOps and engineering capabilities.
+> **Note:** This repository focuses on **Finance Automation**. An older secondary project (Cyber Threat Detection) is briefly mentioned at the end for completeness and is not part of the main application.
 
 ---
 
@@ -21,7 +21,7 @@ An end-to-end finance automation platform built with **FastAPI**, **SQLite**, **
 
 ### 3. Anomaly Detection
 - Duplicate payments.
-- Large round-dollar amounts.
+- Large round‑dollar amounts.
 - Benford's Law deviations.
 - Unusual posting times (weekend/night).
 - Missing descriptions.
@@ -30,23 +30,23 @@ An end-to-end finance automation platform built with **FastAPI**, **SQLite**, **
 - Automatically generates proposed journal entries for:
   - Unmatched bank/GL transactions.
   - Mismatches between intercompany entities.
-- Uses clearing, suspense, and write-off accounts.
+- Uses clearing, suspense, and write‑off accounts.
 
-### 5. Human-in-the-loop Approvals
-- SQLite-backed workflow with statuses: `pending`, `approved`, `rejected`.
+### 5. Human‑in‑the‑loop Approvals
+- SQLite‑backed workflow with statuses: `pending`, `approved`, `rejected`.
 - Audit trail: reviewer, reviewed_at, comments.
 - API endpoints for approve/reject actions.
 
 ### 6. Insights & AI Recommendations
-- Rule-based insights for each approval entry (risk level, recommendation, reasoning).
-- Optional LLM-powered insights via Ollama (default `llama3`), with automatic fallback to rule-based if Ollama is unavailable.
+- Rule‑based insights for each approval entry (risk level, recommendation, reasoning).
+- Optional LLM‑powered insights via Ollama (default `llama3`), with automatic fallback to rule‑based if Ollama is unavailable.
 
 ### 7. Webhook Receiver
 - Accepts transaction payloads from external systems (ERP, payment gateways).
 - Stores events in SQLite with source and received timestamp.
 
 ### 8. Streamlit Dashboard
-- User-friendly UI for:
+- User‑friendly UI for:
   - Viewing and approving/rejecting pending entries.
   - Uploading CSV files for reconciliation.
   - Running intercompany matching.
@@ -62,7 +62,7 @@ An end-to-end finance automation platform built with **FastAPI**, **SQLite**, **
 | Database | SQLite (approvals, webhook events) |
 | Data processing | Pandas, Python standard library |
 | Dashboard | Streamlit |
-| AI/LLM | Ollama (optional), rule-based fallback |
+| AI/LLM | Ollama (optional), rule‑based fallback |
 | Testing | pytest, FastAPI TestClient |
 
 ---
@@ -79,8 +79,8 @@ An end-to-end finance automation platform built with **FastAPI**, **SQLite**, **
 | GET | `/approvals/pending` | List pending approvals |
 | POST | `/approvals/{entry_id}/approve` | Approve entry |
 | POST | `/approvals/{entry_id}/reject` | Reject entry |
-| GET | `/approvals/{entry_id}/insights` | Rule-based approval insights |
-| GET | `/approvals/{entry_id}/llm-insights` | LLM-based insights (fallback to rules) |
+| GET | `/approvals/{entry_id}/insights` | Rule‑based approval insights |
+| GET | `/approvals/{entry_id}/llm-insights` | LLM‑based insights (fallback to rules) |
 | POST | `/anomalies` | Detect anomalies in GL transactions |
 | POST | `/webhooks/transactions` | Receive external transactions |
 | GET | `/webhooks/events` | List webhook events |
@@ -90,45 +90,36 @@ An end-to-end finance automation platform built with **FastAPI**, **SQLite**, **
 ## 🚀 Getting Started
 
 ### 1. Clone the repository
-
 ```bash
-git clone https://github.com/dimitristheodoropoulos/Real-Time-Cyber-Threat-Network-Intrusion-Detection-MLOps.git
-cd Real-Time-Cyber-Threat-Network-Intrusion-Detection-MLOps
+git clone https://github.com/dimitristheodoropoulos/finance-automation-ai-platform.git
+cd finance-automation-ai-platform
 ```
 
 ### 2. Create virtual environment
-
 ```bash
 python3 -m venv venv
 source venv/bin/activate      # Windows: venv\Scripts\activate
 ```
 
 ### 3. Install dependencies
-
 ```bash
 pip install -r requirements_finance.txt
 ```
-
-If you plan to use LLM insights, install Ollama and pull a model (e.g., `llama3`). If Ollama is not running, the API automatically falls back to rule-based insights.
+If you plan to use LLM insights, install Ollama and pull a model (e.g., `llama3`). If Ollama is not running, the API automatically falls back to rule‑based insights.
 
 ### 4. Run the API
-
 ```bash
 uvicorn finance_automation.main:app --reload
 ```
-
 The API will be available at `http://127.0.0.1:8000`.
 
 ### 5. Run the dashboard (optional)
-
 In another terminal:
-
 ```bash
 streamlit run finance_automation/dashboard.py
 ```
 
 ### 6. Run tests
-
 ```bash
 pytest tests/
 ```
@@ -138,7 +129,6 @@ pytest tests/
 ## 📦 Example Usage
 
 ### Reconciliation (JSON)
-
 ```bash
 curl -X POST http://127.0.0.1:8000/reconcile \
   -H "Content-Type: application/json" \
@@ -155,7 +145,6 @@ curl -X POST http://127.0.0.1:8000/reconcile \
 ```
 
 ### Anomaly Detection
-
 ```bash
 curl -X POST http://127.0.0.1:8000/anomalies \
   -H "Content-Type: application/json" \
@@ -166,7 +155,6 @@ curl -X POST http://127.0.0.1:8000/anomalies \
 ```
 
 ### Webhook
-
 ```bash
 curl -X POST http://127.0.0.1:8000/webhooks/transactions \
   -H "Content-Type: application/json" \
@@ -181,15 +169,12 @@ curl -X POST http://127.0.0.1:8000/webhooks/transactions \
 ---
 
 ## 🧠 LLM Integration (Optional)
-
-The platform can use a local LLM (e.g., Ollama with `llama3`) to generate richer approval insights. If Ollama is not available, it falls back to deterministic rule-based recommendations, ensuring the system remains functional in any environment.
+The platform can use a local LLM (e.g., Ollama with `llama3`) to generate richer approval insights. If Ollama is not available, it falls back to deterministic rule‑based recommendations, ensuring the system remains functional in any environment.
 
 ---
 
 ## 🧪 Tests
-
 All core endpoints are covered by pytest tests:
-
 ```bash
 pytest tests/
 ```
@@ -197,25 +182,23 @@ pytest tests/
 ---
 
 ## 🛡️ Resilience & Engineering
-
 The platform follows the principle of **graceful degradation**:
-- LLM features automatically fall back to rule-based logic if the local model is unavailable.
+- LLM features automatically fall back to rule‑based logic if the local model is unavailable.
 - SQLite databases are local and can be recreated automatically.
 - API errors return structured JSON with HTTP status codes.
 
 ---
 
 ## 📂 Project Structure
-
 ```
 finance_automation/
 ├── main.py               # FastAPI app & endpoints
 ├── reconciliation.py     # Bank vs GL matching logic
 ├── intercompany.py       # Intercompany matching
 ├── journal_entries.py    # Proposed journal entries
-├── approvals.py          # Human-in-the-loop approvals (SQLite)
+├── approvals.py          # Human‑in‑the‑loop approvals (SQLite)
 ├── anomaly.py            # Anomaly detection rules
-├── insights.py           # Rule-based approval insights
+├── insights.py           # Rule‑based approval insights
 ├── llm_helper.py         # LLM integration with fallback
 ├── webhooks.py           # Webhook receiver & event store
 ├── config.py             # Environment configuration
@@ -224,23 +207,8 @@ finance_automation/
 
 ---
 
-## 🛡️ Cyber Threat & Network Intrusion Detection MLOps Platform (Secondary)
-
-This repository also includes a **real-time network intrusion detection MLOps platform** originally developed for mission-critical environments. It features:
-
-- Distributed data ingestion with PySpark and Parquet.
-- MLflow tracking and model registry.
-- FastAPI inference with graceful degradation.
-- Air-gapped LLM explanations via Ollama/Phi-3.
-- CI/CD workflows with GitHub Actions.
-- Prometheus metrics for SOC observability.
-
-### Running the Intrusion Detection API
-
-```bash
-docker build -t network-intrusion-api -f Dockerfile .
-docker run -d --name intrusion-api-service -p 8000:8000 -e PYTHONPATH=/app network-intrusion-api
-```
+## 📎 Secondary Project (archived)
+This repository also contains an older **Cyber Threat & Network Intrusion Detection MLOps platform** – a separate project that demonstrates additional MLOps capabilities (PySpark, MLflow, Prometheus, air‑gapped XAI). It is kept here for reference but is **not** part of the Finance Automation application.
 
 ---
 
